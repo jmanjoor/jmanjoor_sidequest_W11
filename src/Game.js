@@ -51,6 +51,17 @@ export class Game {
     this.lastWinMs = null; // time you just finished with
     this.lastWinWasNewBest = false;
 
+    // ── Week 11: Stat Tracker ────────────────────────────────────
+    // Exposed as game.stats so DebugOverlay can read them directly.
+    this.stats = {
+      deaths: 0,       // incremented each time player:died fires
+      hits: 0,         // incremented each time player:damaged fires
+      survivalMs: 0,   // ms alive (mirrors elapsedMs; frozen on death/win)
+    };
+
+    // ── Week 11: Slow-Motion ─────────────────────────────────────
+    this.slowMotion = false; // toggled by M key; main.js applies frameRate()
+
     // leaderboard UI state (top 5)
     this.topScores = []; // [{ name, ms }, ...]
     this.lastRank = null; // 0-4 if in top 5, else null
@@ -102,6 +113,15 @@ export class Game {
     this._unsubs.push(
       this.events.on("player:died", () => {
         this.lost = true;
+        this.stats.deaths++;          // Week 11: count deaths
+        this.stats.survivalMs = Number(this.level?.elapsedMs ?? this.stats.survivalMs);
+      }),
+    );
+
+    // Week 11: count every hit taken
+    this._unsubs.push(
+      this.events.on("player:damaged", () => {
+        this.stats.hits++;
       }),
     );
 
@@ -166,6 +186,11 @@ export class Game {
         this._nameCursor = 0;
         this._blink = 0;
 
+        // Week 11: reset stats on restart
+        this.stats.deaths = 0;
+        this.stats.hits = 0;
+        this.stats.survivalMs = 0;
+
         // refresh snapshots
         this.topScores = this.highScores.getTop?.(5) ?? [];
         const levelId = this._levelId();
@@ -228,6 +253,22 @@ export class Game {
       if (player) player.invincible = !player.invincible;
     }
 
+    // ── Week 11: anytime restart (R works even mid-game, not just on win/lose)
+    if (inputSnap?.restartPressed) {
+      this.restart();
+    }
+
+    // ── Week 11: slow-motion toggle (M)
+    if (inputSnap?.slowMotionPressed) {
+      this.slowMotion = !this.slowMotion;
+      // Actual frameRate() call lives in main.js draw() loop.
+    }
+
+    // ── Week 11: playtest log (L)
+    if (inputSnap?.logStatsPressed) {
+      this.logPlaytestStats();
+    }
+
     // Always advance WORLD (keeps physics + animation normal).
     // Level should stop its internal timer when won/dead.
     this.level.update({ input: inputSnap });
@@ -277,10 +318,9 @@ export class Game {
       }
     }
 
-    // Restart only allowed from terminal states (win/lose)
-    if (inputSnap?.restartPressed && (this.won || dead)) {
-      this.restart();
-    }
+    // (anytime restart is now handled above; this guard is kept for safety but won't double-trigger
+    //  because restartPressed is edge-triggered and already consumed above)
+    // if (inputSnap?.restartPressed && (this.won || dead)) { this.restart(); }
   }
 
   _cycleNameChar(dir) {
@@ -332,10 +372,28 @@ export class Game {
     this._nameCursor = 0;
     this._blink = 0;
 
+    // Week 11: stats reset is also triggered via "level:restarted" event in _wireEventListeners.
+    // Resetting here too so it works even before event wiring.
+    this.stats.deaths = 0;
+    this.stats.hits = 0;
+    this.stats.survivalMs = 0;
+
     this.level.restart();
 
     // refresh leaderboard snapshot
     this.topScores = this.highScores.getTop?.(5) ?? this.topScores;
+  }
+
+  // ── Week 11: Playtest Logging ──────────────────────────────────────
+  // Call with L key during play to dump a snapshot to the browser console.
+  logPlaytestStats() {
+    const survived = Number(this.level?.elapsedMs ?? this.stats.survivalMs ?? 0);
+    const secs = (survived / 1000).toFixed(2);
+    console.group("%c[PLAYTEST LOG]", "color:#0f0;font-weight:bold");
+    console.log("Deaths      :", this.stats.deaths);
+    console.log("Hits taken  :", this.stats.hits);
+    console.log("Time survived:", secs + "s");
+    console.groupEnd();
   }
 
   destroy() {

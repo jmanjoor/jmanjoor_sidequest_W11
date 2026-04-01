@@ -142,10 +142,10 @@ export class DebugOverlay {
 
     // Fixed content height (everything except event lines):
     //   22px = header bar height + gap to first line
-    //    9 fixed text lines (PLAYER: label+pos+vel+HP, WORLD: label+score+enemies+leaves, EVENTS label)
-    //   16px = two 8px dividers
+    //   12 fixed text lines (PLAYER:4, WORLD:4, STATS:4) + EVENTS label = 13 lines
+    //   24px = three 8px dividers
     //    8px = bottom padding
-    const FIXED_H = 22 + 9 * LINE + 16 + 8;
+    const FIXED_H = 22 + 13 * LINE + 24 + 8;
 
     // How many event lines can fit without overflowing the canvas
     const maxBH        = height - BY - 4;
@@ -179,7 +179,7 @@ export class DebugOverlay {
     noStroke();
     fill(10, 18, 28);
     textAlign(LEFT, TOP);
-    text(" DEBUG MODE  [D] [I]", BX + PAD - 4, BY + 3);
+    text(" DEBUG  [D] [I] [M]slow  [R]restart  [L]log", BX + PAD - 4, BY + 3);
 
     // ── section: PLAYER ───────────────────────────────────────
     let ty = BY + 22;
@@ -245,6 +245,55 @@ export class DebugOverlay {
     fill(leafCount > 0 ? color(255, 230, 0) : color(180));
     text(`${leafCount}`, BX + PAD + 50, ty);
     ty += LINE;
+
+    // ── divider ───────────────────────────────────────────────
+    stroke(60, 90, 60);
+    strokeWeight(1);
+    line(BX + PAD, ty + 2, BX + BW - PAD, ty + 2);
+    noStroke();
+    ty += 8;
+
+    // ── section: STATS (Week 11) ───────────────────────────────
+    if (ty < maxRenderY) {
+      // Pull live stats from the game coordinator
+      const stats = game?.stats ?? { deaths: 0, hits: 0, survivalMs: 0 };
+      const survivalSec = (Number(game?.level?.elapsedMs ?? stats.survivalMs) / 1000).toFixed(1);
+      const slowMo      = game?.slowMotion === true;
+
+      fill(120, 200, 255);
+      text("STATS", BX + PAD, ty);
+
+      // Slow-motion badge on the same row
+      if (slowMo) {
+        fill(255, 80, 200);
+        text("[SLOW-MO]", BX + PAD + 60, ty);
+      }
+      ty += LINE;
+
+      if (ty < maxRenderY) {
+        fill(200, 230, 200);
+        text("Deaths", BX + PAD, ty);
+        fill(stats.deaths > 0 ? color(255, 80, 80) : color(180));
+        text(`${stats.deaths}`, BX + PAD + 60, ty);
+        ty += LINE;
+      }
+
+      if (ty < maxRenderY) {
+        fill(200, 230, 200);
+        text("Hits taken", BX + PAD, ty);
+        fill(stats.hits > 0 ? color(255, 160, 60) : color(180));
+        text(`${stats.hits}`, BX + PAD + 60, ty);
+        ty += LINE;
+      }
+
+      if (ty < maxRenderY) {
+        fill(200, 230, 200);
+        text("Survived", BX + PAD, ty);
+        fill(255);
+        text(`${survivalSec}s`, BX + PAD + 60, ty);
+        ty += LINE;
+      }
+    }
 
     // ── divider ───────────────────────────────────────────────
     stroke(60, 90, 60);

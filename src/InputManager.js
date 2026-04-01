@@ -23,6 +23,8 @@ export class InputManager {
       restart: false,
       debugToggle: false,
       invincibility: false, // Week 9 debug: invincibility toggle
+      slowMotion: false,    // Week 11 debug: slow-motion toggle (M)
+      logStats: false,      // Week 11 debug: dump playtest stats (L)
     };
 
     // canonical snapshot (same object reused every frame)
@@ -37,6 +39,8 @@ export class InputManager {
       restartPressed: false,
       debugTogglePressed: false,
       invincibilityPressed: false, // Week 9 debug: press I to toggle invincibility
+      slowMotionPressed: false,    // Week 11 debug: M to toggle slow-motion
+      logStatsPressed: false,      // Week 11 debug: L to dump playtest log
     };
   }
 
@@ -50,6 +54,8 @@ export class InputManager {
       this._input.restartPressed = false;
       this._input.debugTogglePressed = false;
       this._input.invincibilityPressed = false;
+      this._input.slowMotionPressed = false;
+      this._input.logStatsPressed = false;
       return this._input;
     }
 
@@ -70,6 +76,8 @@ export class InputManager {
     // D is the spec-required debug key; T kept for convenience (D also moves right on first frame)
     const debugToggleDown = kb.pressing("t") || kb.pressing("d");
     const invincibilityDown = kb.pressing("i"); // Week 9 debug: invincibility toggle
+    const slowMotionDown = kb.pressing("m");     // Week 11 debug: slow-motion toggle
+    const logStatsDown = kb.pressing("l");       // Week 11 debug: dump playtest log
 
     // -----------------------
     // Write snapshot
@@ -82,6 +90,8 @@ export class InputManager {
     this._input.restartPressed = restartDown && !this._prevDown.restart;
     this._input.debugTogglePressed = debugToggleDown && !this._prevDown.debugToggle;
     this._input.invincibilityPressed = invincibilityDown && !this._prevDown.invincibility;
+    this._input.slowMotionPressed = slowMotionDown && !this._prevDown.slowMotion;
+    this._input.logStatsPressed = logStatsDown && !this._prevDown.logStats;
 
     // -----------------------
     // Store prev DOWN states
@@ -91,6 +101,8 @@ export class InputManager {
     this._prevDown.restart = restartDown;
     this._prevDown.debugToggle = debugToggleDown;
     this._prevDown.invincibility = invincibilityDown;
+    this._prevDown.slowMotion = slowMotionDown;
+    this._prevDown.logStats = logStatsDown;
 
     return this._input;
   }

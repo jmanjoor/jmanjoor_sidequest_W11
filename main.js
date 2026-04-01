@@ -221,6 +221,13 @@ function draw() {
 
   game.update();
 
+  // ── Week 11: slow-motion — game.update() already toggled the flag; apply rate now
+  if (game.slowMotion) {
+    frameRate(15);
+  } else {
+    frameRate(60);
+  }
+
   cameraController?.update({
     viewW,
     viewH,
