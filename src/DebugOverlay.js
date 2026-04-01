@@ -138,14 +138,14 @@ export class DebugOverlay {
     const BY   = 6;   // box y
     const BW   = 218; // box width
     const PAD  = 10;  // left text padding
-    const LINE = 11;  // line height
+    const LINE = 10;  // line height (kept small to fit 192px canvas)
 
     // Fixed content height (everything except event lines):
-    //   22px = header bar height + gap to first line
-    //   12 fixed text lines (PLAYER:4, WORLD:4, STATS:4) + EVENTS label = 13 lines
-    //   24px = three 8px dividers
+    //   28px = two-line header bar (26px) + 2px gap
+    //   13 fixed text lines (PLAYER:4, WORLD:4, STATS:4, EVENTS label:1)
+    //   15px = three 5px dividers
     //    8px = bottom padding
-    const FIXED_H = 22 + 13 * LINE + 24 + 8;
+    const FIXED_H = 28 + 13 * LINE + 15 + 8;
 
     // How many event lines can fit without overflowing the canvas
     const maxBH        = height - BY - 4;
@@ -170,19 +170,20 @@ export class DebugOverlay {
     fill(0, 0, 0, 80);
     rect(BX, BY, BW, BH, 6);
 
-    // header bar
+    // header bar — tall enough for two lines
     fill(0, 200, 80, 220);
-    rect(BX, BY, BW, 16, 6, 6, 0, 0);
+    rect(BX, BY, BW, 26, 6, 6, 0, 0);
 
-    // ── header text — single left-aligned line to avoid overlap ──
+    // ── header text — two lines so nothing overflows the panel ──
     textSize(10);
     noStroke();
     fill(10, 18, 28);
     textAlign(LEFT, TOP);
-    text(" DEBUG  [D] [I] [M]slow  [R]restart  [L]log", BX + PAD - 4, BY + 3);
+    text(" DEBUG   [D] toggle   [I] invinc", BX + PAD - 4, BY + 2);
+    text(" [M] slow   [R] restart   [L] log", BX + PAD - 4, BY + 13);
 
     // ── section: PLAYER ───────────────────────────────────────
-    let ty = BY + 22;
+    let ty = BY + 28;
 
     fill(120, 200, 255); // section label color
     text("PLAYER", BX + PAD, ty);
@@ -221,7 +222,7 @@ export class DebugOverlay {
     strokeWeight(1);
     line(BX + PAD, ty + 2, BX + BW - PAD, ty + 2);
     noStroke();
-    ty += 8;
+    ty += 5;
 
     // ── section: WORLD ────────────────────────────────────────
     fill(120, 200, 255);
@@ -251,7 +252,7 @@ export class DebugOverlay {
     strokeWeight(1);
     line(BX + PAD, ty + 2, BX + BW - PAD, ty + 2);
     noStroke();
-    ty += 8;
+    ty += 5;
 
     // ── section: STATS (Week 11) ───────────────────────────────
     if (ty < maxRenderY) {
@@ -300,7 +301,7 @@ export class DebugOverlay {
     strokeWeight(1);
     line(BX + PAD, ty + 2, BX + BW - PAD, ty + 2);
     noStroke();
-    ty += 8;
+    ty += 5;
 
     // ── section: EVENTS ───────────────────────────────────────
     if (ty >= maxRenderY) return; // no space left — skip entirely
