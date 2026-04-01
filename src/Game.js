@@ -118,10 +118,14 @@ export class Game {
       }),
     );
 
-    // Week 11: count every hit taken
+    // Week 11: count every hit taken + log it
     this._unsubs.push(
       this.events.on("player:damaged", () => {
         this.stats.hits++;
+        console.log(
+          `%c[HIT] Player struck by enemy — total hits: ${this.stats.hits}`,
+          "color:#ff8c00;font-weight:bold"
+        );
       }),
     );
 
